@@ -15,7 +15,7 @@ export default function PlayerInfo({name, symbol}){
   if(isEditing){
     showingSpan = <input type="text"  required  value = {playerNmae} onChange={HandleChange}/>
   } 
-  
+     
 
   return(
     <li>
