@@ -3,6 +3,7 @@ import Log from "../components/Log";
 import PlayerInfo from "../components/PlayerInfo"
 import GameBoard from "../components/GameBoard"
 import { WINNING_COMBINATIONS } from "../components/wining-combination";
+import GameOver from "../components/GameOver";
 
 const initialBoard =[
   [null, null, null],
@@ -21,36 +22,63 @@ function getPlayer(turnrs)
   return curPlayer;
 }
 
-function isGameOver(gameboard){
+function isGameOver(gameboard, players){
   for(const combination of WINNING_COMBINATIONS){
     const firstCage =  gameboard[combination[0].row][combination[0].column]
     const secondCage = gameboard[combination[1].row][combination[1].column]
     const thirdCage = gameboard[combination[2].row][combination[2].column]
     if( firstCage && firstCage === secondCage && secondCage === thirdCage){
-      return firstCage;
+      return players[firstCage];
     }
     
   }
   return null;
 }
 
-
-function App() {
-  const [gameTurn, SetGameTurn] = useState([]);
- 
-  var activePlayer = getPlayer(gameTurn);
-
-  // game board inisialization 
-  const gameboard = initialBoard.map(row => [...row]);
+function ShowGameBoard(gameTurn){
+  const gameboard = [...initialBoard.map(innnerArray => [...innnerArray])]
 
   for (const val of gameTurn) {
     const { square, people: player } = val;
     const { row, colom } = square;
     gameboard[row][colom] = player; 
   }
+  return gameboard
+}
+
+
+function App() {
+  const [players, setPlayers] = useState(
+    {
+      "X" : "Player 1",
+      "O" : "Player 2"
+    }
+  );
+  // function that change name of playere
+  function handlePlayers(symbol, newName){
+    setPlayers((prevArray) => 
+    {
+      return {...prevArray, [symbol] : newName}
+    });
+  }
+  const [gameTurn, SetGameTurn] = useState([]);
+  function Reset(){
+    SetGameTurn([]);
+  }
+
+  var activePlayer = getPlayer(gameTurn);
+
+  // game board inisialization 
+  const gameboard = ShowGameBoard(gameTurn);
   // check if game is over 
-  let win = isGameOver(gameboard);
-  
+  let win = isGameOver(gameboard, players);
+  let showingEnd = null;
+  if(!win && gameTurn.length === 9){
+    win = "Draw"; 
+  }
+  if(win){
+    showingEnd = <GameOver winner={win} onSelect={Reset}/>
+  }  
   
   function HandleActivePlayer(rowIndex, colomIndex){
     SetGameTurn(
@@ -67,15 +95,12 @@ function App() {
     <main>
       <div id="game-container">
         <ol id="players" className="highlight-player">
-          <PlayerInfo name ="Player 1" symbol="X" isActive={activePlayer === "X"}/>
-          <PlayerInfo name ="Player 2" symbol="O" isActive={activePlayer ==="O"}/>
+          <PlayerInfo name ={players.X} symbol="X" isActive={activePlayer === "X"} onChange={handlePlayers}/>
+          <PlayerInfo name ={players.O} symbol="O" isActive={activePlayer ==="O"} onChange={handlePlayers}/>
         </ol>
-
-        {win && <p>Winner is {win}</p>}
-
         <GameBoard onSelectSquare={HandleActivePlayer} board={gameboard}/>
+        {showingEnd}
       </div>
-      
       <Log turns={gameTurn}/>
     
     </main>
